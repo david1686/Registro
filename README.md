@@ -29,6 +29,7 @@
   </form>
 
   <h2>Lista de Estudiantes</h2>
+  <!-- Botones de exportación -->
   <button onclick="exportarPDF()">Exportar a PDF</button>
   <button onclick="exportarExcel()">Exportar a Excel</button>
   <ul id="lista"></ul>
