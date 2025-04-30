@@ -4,44 +4,80 @@
   <meta charset="UTF-8" />
   <title>Registro de Estudiantes</title>
 
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- jsPDF -->
+  <!-- jsPDF para exportar a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- SheetJS (Excel) -->
+  <!-- SheetJS para exportar a Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
-<body>
-  <h1>Registro de Estudiantes</h1>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="text-center mb-4">Registro de Estudiantes</h1>
 
-  <form id="formulario">
-    <label>Primer Apellido: <input type="text" id="apellido1" required></label><br><br>
-    <label>Segundo Apellido: <input type="text" id="apellido2" required></label><br><br>
-    <label>Nombre: <input type="text" id="nombre" required></label><br><br>
-    <label>Sección: <input type="text" id="seccion" required></label><br><br>
-    <label>Materia: <input type="text" id="materia" required></label><br><br>
-    <label>Docente: <input type="text" id="docente" required></label><br><br>
-    <label>Número de ausencias: <input type="number" id="ausencias" required></label><br><br>
-    <label>Factores de riesgo:<br><textarea id="riesgo" required></textarea></label><br><br>
-    <label>Acciones realizadas:<br><textarea id="acciones" required></textarea></label><br><br>
-    <button type="submit">Registrar</button>
-  </form>
+    <form id="formulario" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Primer Apellido</label>
+        <input type="text" id="apellido1" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Segundo Apellido</label>
+        <input type="text" id="apellido2" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Nombre</label>
+        <input type="text" id="nombre" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Sección</label>
+        <input type="text" id="seccion" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Materia</label>
+        <input type="text" id="materia" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Docente</label>
+        <input type="text" id="docente" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Número de ausencias</label>
+        <input type="number" id="ausencias" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Factores de riesgo</label>
+        <textarea id="riesgo" class="form-control" required></textarea>
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">Acciones realizadas</label>
+        <textarea id="acciones" class="form-control" required></textarea>
+      </div>
+      <div class="col-12 text-end">
+        <button type="submit" class="btn btn-primary">Registrar</button>
+      </div>
+    </form>
 
-  <h2>Lista de Estudiantes</h2>
+    <hr class="my-4">
 
-  <!-- Búsqueda por sección -->
-  <label for="search">Buscar por sección: </label>
-  <input type="text" id="search" placeholder="Ej: 10-1" oninput="filtrarEstudiantes()">
-  <br><br>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <input type="text" id="search" class="form-control w-50" placeholder="Buscar por sección..." oninput="filtrarEstudiantes()">
+      <div class="ms-3">
+        <button onclick="exportarPDF()" class="btn btn-outline-danger me-2">Exportar a PDF</button>
+        <button onclick="exportarExcel()" class="btn btn-outline-success">Exportar a Excel</button>
+      </div>
+    </div>
 
-  <!-- Botones de exportación -->
-  <button onclick="exportarPDF()">Exportar a PDF</button>
-  <button onclick="exportarExcel()">Exportar a Excel</button>
-
-  <ul id="lista"></ul>
+    <div id="lista" class="row"></div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -60,8 +96,8 @@
     const form = document.getElementById("formulario");
     const lista = document.getElementById("lista");
     const searchInput = document.getElementById("search");
-
     let idActual = null;
+    let estudiantesFiltrados = [];
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -91,82 +127,71 @@
       }
     });
 
-    // Función para filtrar la lista por sección
-    function filtrarEstudiantes() {
-      const searchTerm = searchInput.value.toLowerCase();
-      db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
-        lista.innerHTML = "";
-        snapshot.forEach(doc => {
-          const est = doc.data();
-          if (est.seccion.toLowerCase().includes(searchTerm)) {
-            const li = document.createElement("li");
-            li.innerHTML = `
-              <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
-              Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
-              Ausencias: ${est.ausencias}<br>
-              <em>Factores de riesgo:</em> ${est.riesgo}<br>
-              <em>Acciones realizadas:</em> ${est.acciones}<br>
-              <button onclick="editarEstudiante('${doc.id}')">Editar</button>
-              <button onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
-              <hr>
-            `;
-            lista.appendChild(li);
-          }
-        });
-      });
-    }
-
-    // Función para obtener datos filtrados por sección
-    function obtenerDatosFiltrados(callback) {
-      const searchTerm = searchInput.value.toLowerCase();
-      db.collection("estudiantes").orderBy("nombre").get().then(snapshot => {
-        const filtrados = [];
-        snapshot.forEach(doc => {
-          const est = doc.data();
-          if (est.seccion.toLowerCase().includes(searchTerm)) {
-            filtrados.push(est);
-          }
-        });
-        callback(filtrados);
-      });
-    }
-
-    // Mostrar toda la lista inicial
-    db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
+    function renderLista(estudiantes) {
       lista.innerHTML = "";
-      snapshot.forEach(doc => {
-        const est = doc.data();
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
-          Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
-          Ausencias: ${est.ausencias}<br>
-          <em>Factores de riesgo:</em> ${est.riesgo}<br>
-          <em>Acciones realizadas:</em> ${est.acciones}<br>
-          <button onclick="editarEstudiante('${doc.id}')">Editar</button>
-          <button onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
-          <hr>
+      estudiantes.forEach(est => {
+        const col = document.createElement("div");
+        col.className = "col-md-6 mb-3";
+
+        col.innerHTML = `
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">${est.nombre} ${est.apellido1} ${est.apellido2}</h5>
+              <p class="card-text">
+                <strong>Sección:</strong> ${est.seccion} <br>
+                <strong>Materia:</strong> ${est.materia} <br>
+                <strong>Docente:</strong> ${est.docente} <br>
+                <strong>Ausencias:</strong> ${est.ausencias} <br>
+                <strong>Riesgo:</strong> ${est.riesgo} <br>
+                <strong>Acciones:</strong> ${est.acciones}
+              </p>
+              <button onclick="editarEstudiante('${est.id}')" class="btn btn-sm btn-warning me-2">Editar</button>
+              <button onclick="eliminarEstudiante('${est.id}')" class="btn btn-sm btn-danger">Eliminar</button>
+            </div>
+          </div>
         `;
-        lista.appendChild(li);
+
+        lista.appendChild(col);
       });
+    }
+
+    async function filtrarEstudiantes() {
+      const seccion = searchInput.value.toLowerCase();
+      const snapshot = await db.collection("estudiantes").orderBy("nombre").get();
+      estudiantesFiltrados = [];
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.seccion.toLowerCase().includes(seccion)) {
+          estudiantesFiltrados.push({ ...data, id: doc.id });
+        }
+      });
+
+      renderLista(estudiantesFiltrados);
+    }
+
+    db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
+      estudiantesFiltrados = [];
+      snapshot.forEach(doc => {
+        estudiantesFiltrados.push({ ...doc.data(), id: doc.id });
+      });
+      renderLista(estudiantesFiltrados);
     });
 
     function editarEstudiante(id) {
-      db.collection("estudiantes").doc(id).get().then(doc => {
-        if (doc.exists) {
-          const est = doc.data();
-          document.getElementById("apellido1").value = est.apellido1;
-          document.getElementById("apellido2").value = est.apellido2;
-          document.getElementById("nombre").value = est.nombre;
-          document.getElementById("seccion").value = est.seccion;
-          document.getElementById("materia").value = est.materia;
-          document.getElementById("docente").value = est.docente;
-          document.getElementById("ausencias").value = est.ausencias;
-          document.getElementById("riesgo").value = est.riesgo;
-          document.getElementById("acciones").value = est.acciones;
-          idActual = id;
-        }
-      });
+      const est = estudiantesFiltrados.find(e => e.id === id);
+      if (est) {
+        document.getElementById("apellido1").value = est.apellido1;
+        document.getElementById("apellido2").value = est.apellido2;
+        document.getElementById("nombre").value = est.nombre;
+        document.getElementById("seccion").value = est.seccion;
+        document.getElementById("materia").value = est.materia;
+        document.getElementById("docente").value = est.docente;
+        document.getElementById("ausencias").value = est.ausencias;
+        document.getElementById("riesgo").value = est.riesgo;
+        document.getElementById("acciones").value = est.acciones;
+        idActual = id;
+      }
     }
 
     function eliminarEstudiante(id) {
@@ -177,55 +202,49 @@
       }
     }
 
-    function exportarPDF() {
-      obtenerDatosFiltrados((estudiantes) => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        let y = 10;
-        doc.setFontSize(12);
+    async function exportarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
 
-        estudiantes.forEach((est, i) => {
-          doc.text(`${i + 1}. ${est.nombre} ${est.apellido1} ${est.apellido2}`, 10, y);
-          y += 7;
-          doc.text(`   Sección: ${est.seccion} | Materia: ${est.materia}`, 10, y);
-          y += 7;
-          doc.text(`   Docente: ${est.docente} | Ausencias: ${est.ausencias}`, 10, y);
-          y += 7;
-          doc.text(`   Riesgo: ${est.riesgo}`, 10, y);
-          y += 7;
-          doc.text(`   Acciones: ${est.acciones}`, 10, y);
-          y += 10;
+      estudiantesFiltrados.forEach((est, i) => {
+        doc.text(`${i + 1}. ${est.nombre} ${est.apellido1} ${est.apellido2}`, 10, y);
+        y += 7;
+        doc.text(`   Sección: ${est.seccion} | Materia: ${est.materia}`, 10, y);
+        y += 7;
+        doc.text(`   Docente: ${est.docente} | Ausencias: ${est.ausencias}`, 10, y);
+        y += 7;
+        doc.text(`   Riesgo: ${est.riesgo}`, 10, y);
+        y += 7;
+        doc.text(`   Acciones: ${est.acciones}`, 10, y);
+        y += 10;
 
-          if (y > 270) {
-            doc.addPage();
-            y = 10;
-          }
-        });
-
-        doc.save("estudiantes_filtrados.pdf");
+        if (y > 270) {
+          doc.addPage();
+          y = 10;
+        }
       });
+
+      doc.save("estudiantes.pdf");
     }
 
-    function exportarExcel() {
-      obtenerDatosFiltrados((estudiantes) => {
-        const data = estudiantes.map(est => ({
-          Nombre: est.nombre,
-          "Primer Apellido": est.apellido1,
-          "Segundo Apellido": est.apellido2,
-          Sección: est.seccion,
-          Materia: est.materia,
-          Docente: est.docente,
-          Ausencias: est.ausencias,
-          "Factores de riesgo": est.riesgo,
-          "Acciones realizadas": est.acciones
-        }));
+    async function exportarExcel() {
+      const data = estudiantesFiltrados.map(est => ({
+        Nombre: est.nombre,
+        "Primer Apellido": est.apellido1,
+        "Segundo Apellido": est.apellido2,
+        Sección: est.seccion,
+        Materia: est.materia,
+        Docente: est.docente,
+        Ausencias: est.ausencias,
+        "Factores de riesgo": est.riesgo,
+        "Acciones realizadas": est.acciones
+      }));
 
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Estudiantes");
-
-        XLSX.writeFile(workbook, "estudiantes_filtrados.xlsx");
-      });
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Estudiantes");
+      XLSX.writeFile(workbook, "estudiantes.xlsx");
     }
   </script>
 </body>
