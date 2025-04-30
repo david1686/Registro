@@ -42,6 +42,8 @@
     const form = document.getElementById("formulario");
     const lista = document.getElementById("lista");
 
+    let idActual = null;
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -58,7 +60,12 @@
       };
 
       try {
-        await db.collection("estudiantes").add(data);
+        if (idActual) {
+          await db.collection("estudiantes").doc(idActual).update(data);
+          idActual = null;
+        } else {
+          await db.collection("estudiantes").add(data);
+        }
         form.reset();
       } catch (error) {
         alert("Error al guardar: " + error.message);
@@ -75,12 +82,40 @@
           Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
           Ausencias: ${est.ausencias}<br>
           <em>Factores de riesgo:</em> ${est.riesgo}<br>
-          <em>Acciones realizadas:</em> ${est.acciones}
+          <em>Acciones realizadas:</em> ${est.acciones}<br>
+          <button onclick="editarEstudiante('${doc.id}')">Editar</button>
+          <button onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
           <hr>
         `;
         lista.appendChild(li);
       });
     });
+
+    function editarEstudiante(id) {
+      db.collection("estudiantes").doc(id).get().then(doc => {
+        if (doc.exists) {
+          const est = doc.data();
+          document.getElementById("apellido1").value = est.apellido1;
+          document.getElementById("apellido2").value = est.apellido2;
+          document.getElementById("nombre").value = est.nombre;
+          document.getElementById("seccion").value = est.seccion;
+          document.getElementById("materia").value = est.materia;
+          document.getElementById("docente").value = est.docente;
+          document.getElementById("ausencias").value = est.ausencias;
+          document.getElementById("riesgo").value = est.riesgo;
+          document.getElementById("acciones").value = est.acciones;
+          idActual = id;
+        }
+      });
+    }
+
+    function eliminarEstudiante(id) {
+      if (confirm("¿Deseás eliminar este registro?")) {
+        db.collection("estudiantes").doc(id).delete().catch(err => {
+          alert("Error al eliminar: " + err.message);
+        });
+      }
+    }
   </script>
 </body>
 </html>
