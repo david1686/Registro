@@ -5,6 +5,12 @@
   <title>Registro de Estudiantes</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- jsPDF para exportar a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- SheetJS para exportar a Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <h1>Registro de Estudiantes</h1>
@@ -23,6 +29,8 @@
   </form>
 
   <h2>Lista de Estudiantes</h2>
+  <button onclick="exportarPDF()">Exportar a PDF</button>
+  <button onclick="exportarExcel()">Exportar a Excel</button>
   <ul id="lista"></ul>
 
   <script>
@@ -115,6 +123,63 @@
           alert("Error al eliminar: " + err.message);
         });
       }
+    }
+
+    async function exportarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const snapshot = await db.collection("estudiantes").orderBy("nombre").get();
+
+      let y = 10;
+      doc.setFontSize(12);
+
+      snapshot.forEach((docSnap, i) => {
+        const est = docSnap.data();
+        doc.text(`${i + 1}. ${est.nombre} ${est.apellido1} ${est.apellido2}`, 10, y);
+        y += 7;
+        doc.text(`   Sección: ${est.seccion} | Materia: ${est.materia}`, 10, y);
+        y += 7;
+        doc.text(`   Docente: ${est.docente} | Ausencias: ${est.ausencias}`, 10, y);
+        y += 7;
+        doc.text(`   Riesgo: ${est.riesgo}`, 10, y);
+        y += 7;
+        doc.text(`   Acciones: ${est.acciones}`, 10, y);
+        y += 10;
+
+        if (y > 270) {
+          doc.addPage();
+          y = 10;
+        }
+      });
+
+      doc.save("estudiantes.pdf");
+    }
+
+    async function exportarExcel() {
+      const snapshot = await db.collection("estudiantes").orderBy("nombre").get();
+      const data = [];
+
+      snapshot.forEach(docSnap => {
+        const est = docSnap.data();
+        data.push({
+          Nombre: est.nombre,
+          "Primer Apellido": est.apellido1,
+          "Segundo Apellido": est.apellido2,
+          Sección: est.seccion,
+          Materia: est.materia,
+          Docente: est.docente,
+          Ausencias: est.ausencias,
+          "Factores de riesgo": est.riesgo,
+          "Acciones realizadas": est.acciones
+        });
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Estudiantes");
+
+      XLSX.writeFile(workbook, "estudiantes.xlsx");
     }
   </script>
 </body>
