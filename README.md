@@ -30,9 +30,9 @@
 
   <h2>Lista de Estudiantes</h2>
 
-  <!-- Campo de búsqueda -->
-  <label for="search">Buscar Estudiante: </label>
-  <input type="text" id="search" placeholder="Buscar por nombre..." oninput="filtrarEstudiantes()">
+  <!-- Campo de búsqueda por sección -->
+  <label for="search">Buscar por Sección: </label>
+  <input type="text" id="search" placeholder="Ej: 10-2" oninput="filtrarEstudiantes()">
   <br><br>
 
   <!-- Botones de exportación -->
@@ -60,6 +60,7 @@
     const searchInput = document.getElementById("search");
 
     let idActual = null;
+    let estudiantesFiltrados = [];
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -84,22 +85,26 @@
           await db.collection("estudiantes").add(data);
         }
         form.reset();
+        filtrarEstudiantes(); // Refrescar la lista después de guardar
       } catch (error) {
         alert("Error al guardar: " + error.message);
       }
     });
 
-    // Función para filtrar los estudiantes
     function filtrarEstudiantes() {
       const searchTerm = searchInput.value.toLowerCase();
+      estudiantesFiltrados = [];
+
       db.collection("estudiantes")
         .orderBy("nombre")
-        .onSnapshot(snapshot => {
+        .get()
+        .then(snapshot => {
           lista.innerHTML = "";
           snapshot.forEach(doc => {
             const est = doc.data();
-            // Solo muestra estudiantes cuyo nombre contenga el término de búsqueda
-            if (est.nombre.toLowerCase().includes(searchTerm)) {
+            if (est.seccion.toLowerCase().includes(searchTerm)) {
+              estudiantesFiltrados.push(est);
+
               const li = document.createElement("li");
               li.innerHTML = `
                 <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
@@ -114,27 +119,37 @@
               lista.appendChild(li);
             }
           });
+
+          // Si el campo de búsqueda está vacío, mostrar todos
+          if (searchTerm === "") {
+            cargarEstudiantes(); // Mostrar todo
+          }
         });
     }
 
-    db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
-      lista.innerHTML = "";
-      snapshot.forEach(doc => {
-        const est = doc.data();
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
-          Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
-          Ausencias: ${est.ausencias}<br>
-          <em>Factores de riesgo:</em> ${est.riesgo}<br>
-          <em>Acciones realizadas:</em> ${est.acciones}<br>
-          <button onclick="editarEstudiante('${doc.id}')">Editar</button>
-          <button onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
-          <hr>
-        `;
-        lista.appendChild(li);
+    function cargarEstudiantes() {
+      db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
+        lista.innerHTML = "";
+        estudiantesFiltrados = [];
+        snapshot.forEach(doc => {
+          const est = doc.data();
+          estudiantesFiltrados.push(est); // Se usa para exportar si no hay filtro
+
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
+            Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
+            Ausencias: ${est.ausencias}<br>
+            <em>Factores de riesgo:</em> ${est.riesgo}<br>
+            <em>Acciones realizadas:</em> ${est.acciones}<br>
+            <button onclick="editarEstudiante('${doc.id}')">Editar</button>
+            <button onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
+            <hr>
+          `;
+          lista.appendChild(li);
+        });
       });
-    });
+    }
 
     function editarEstudiante(id) {
       db.collection("estudiantes").doc(id).get().then(doc => {
@@ -149,14 +164,16 @@
           document.getElementById("ausencias").value = est.ausencias;
           document.getElementById("riesgo").value = est.riesgo;
           document.getElementById("acciones").value = est.acciones;
-          idActual = id;
+          idActual = doc.id;
         }
       });
     }
 
     function eliminarEstudiante(id) {
       if (confirm("¿Deseás eliminar este registro?")) {
-        db.collection("estudiantes").doc(id).delete().catch(err => {
+        db.collection("estudiantes").doc(id).delete().then(() => {
+          filtrarEstudiantes(); // Refresca después de eliminar
+        }).catch(err => {
           alert("Error al eliminar: " + err.message);
         });
       }
@@ -166,13 +183,13 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      const snapshot = await db.collection("estudiantes").orderBy("nombre").get();
+      const datos = estudiantesFiltrados.length > 0 ? estudiantesFiltrados :
+        (await db.collection("estudiantes").orderBy("nombre").get()).docs.map(d => d.data());
 
       let y = 10;
       doc.setFontSize(12);
 
-      snapshot.forEach((docSnap, i) => {
-        const est = docSnap.data();
+      datos.forEach((est, i) => {
         doc.text(`${i + 1}. ${est.nombre} ${est.apellido1} ${est.apellido2}`, 10, y);
         y += 7;
         doc.text(`   Sección: ${est.seccion} | Materia: ${est.materia}`, 10, y);
@@ -194,23 +211,20 @@
     }
 
     async function exportarExcel() {
-      const snapshot = await db.collection("estudiantes").orderBy("nombre").get();
-      const data = [];
+      const datos = estudiantesFiltrados.length > 0 ? estudiantesFiltrados :
+        (await db.collection("estudiantes").orderBy("nombre").get()).docs.map(d => d.data());
 
-      snapshot.forEach(docSnap => {
-        const est = docSnap.data();
-        data.push({
-          Nombre: est.nombre,
-          "Primer Apellido": est.apellido1,
-          "Segundo Apellido": est.apellido2,
-          Sección: est.seccion,
-          Materia: est.materia,
-          Docente: est.docente,
-          Ausencias: est.ausencias,
-          "Factores de riesgo": est.riesgo,
-          "Acciones realizadas": est.acciones
-        });
-      });
+      const data = datos.map(est => ({
+        Nombre: est.nombre,
+        "Primer Apellido": est.apellido1,
+        "Segundo Apellido": est.apellido2,
+        Sección: est.seccion,
+        Materia: est.materia,
+        Docente: est.docente,
+        Ausencias: est.ausencias,
+        "Factores de riesgo": est.riesgo,
+        "Acciones realizadas": est.acciones
+      }));
 
       const worksheet = XLSX.utils.json_to_sheet(data);
       const workbook = XLSX.utils.book_new();
@@ -218,6 +232,9 @@
 
       XLSX.writeFile(workbook, "estudiantes.xlsx");
     }
+
+    // Cargar todo al principio
+    cargarEstudiantes();
   </script>
 </body>
 </html>
