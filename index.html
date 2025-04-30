@@ -10,9 +10,15 @@
   <h1>Registro de Estudiantes</h1>
 
   <form id="formulario">
-    <label>Nombre: <input type="text" id="nombre" required /></label><br><br>
-    <label>Edad: <input type="number" id="edad" required /></label><br><br>
-    <label>Correo: <input type="email" id="correo" required /></label><br><br>
+    <label>Primer Apellido: <input type="text" id="apellido1" required></label><br><br>
+    <label>Segundo Apellido: <input type="text" id="apellido2" required></label><br><br>
+    <label>Nombre: <input type="text" id="nombre" required></label><br><br>
+    <label>Sección: <input type="text" id="seccion" required></label><br><br>
+    <label>Materia: <input type="text" id="materia" required></label><br><br>
+    <label>Docente: <input type="text" id="docente" required></label><br><br>
+    <label>Número de ausencias: <input type="number" id="ausencias" required></label><br><br>
+    <label>Factores de riesgo:<br><textarea id="riesgo" required></textarea></label><br><br>
+    <label>Acciones realizadas:<br><textarea id="acciones" required></textarea></label><br><br>
     <button type="submit">Registrar</button>
   </form>
 
@@ -20,46 +26,58 @@
   <ul id="lista"></ul>
 
   <script>
-    // Configuración de Firebase (la tuya, ya corregida)
     const firebaseConfig = {
       apiKey: "AIzaSyBKluxJeTIlO17uAYkrIr5JoTjLiovtDyM",
       authDomain: "registro-a9fd3.firebaseapp.com",
       projectId: "registro-a9fd3",
-      storageBucket: "registro-a9fd3.appspot.com",  // CORREGIDO (.app → .appspot.com)
+      storageBucket: "registro-a9fd3.appspot.com",
       messagingSenderId: "399328760047",
       appId: "1:399328760047:web:7c5c567fbefead86becb1a",
       measurementId: "G-DLZ74RJWPX"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Lógica del formulario
     const form = document.getElementById("formulario");
     const lista = document.getElementById("lista");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const nombre = document.getElementById("nombre").value;
-      const edad = parseInt(document.getElementById("edad").value);
-      const correo = document.getElementById("correo").value;
+
+      const data = {
+        apellido1: document.getElementById("apellido1").value,
+        apellido2: document.getElementById("apellido2").value,
+        nombre: document.getElementById("nombre").value,
+        seccion: document.getElementById("seccion").value,
+        materia: document.getElementById("materia").value,
+        docente: document.getElementById("docente").value,
+        ausencias: parseInt(document.getElementById("ausencias").value),
+        riesgo: document.getElementById("riesgo").value,
+        acciones: document.getElementById("acciones").value
+      };
 
       try {
-        await db.collection("estudiantes").add({ nombre, edad, correo });
+        await db.collection("estudiantes").add(data);
         form.reset();
       } catch (error) {
         alert("Error al guardar: " + error.message);
       }
     });
 
-    // Mostrar estudiantes en tiempo real
     db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
       lista.innerHTML = "";
       snapshot.forEach(doc => {
         const est = doc.data();
         const li = document.createElement("li");
-        li.textContent = `${est.nombre} - ${est.edad} años - ${est.correo}`;
+        li.innerHTML = `
+          <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
+          Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
+          Ausencias: ${est.ausencias}<br>
+          <em>Factores de riesgo:</em> ${est.riesgo}<br>
+          <em>Acciones realizadas:</em> ${est.acciones}
+          <hr>
+        `;
         lista.appendChild(li);
       });
     });
