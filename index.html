@@ -20,31 +20,22 @@
   <ul id="lista"></ul>
 
   <script>
-    // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    // Configuración de Firebase (la tuya, ya corregida)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKluxJeTIlO17uAYkrIr5JoTjLiovtDyM",
+      authDomain: "registro-a9fd3.firebaseapp.com",
+      projectId: "registro-a9fd3",
+      storageBucket: "registro-a9fd3.appspot.com",  // CORREGIDO (.app → .appspot.com)
+      messagingSenderId: "399328760047",
+      appId: "1:399328760047:web:7c5c567fbefead86becb1a",
+      measurementId: "G-DLZ74RJWPX"
+    };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBKluxJeTIlO17uAYkrIr5JoTjLiovtDyM",
-  authDomain: "registro-a9fd3.firebaseapp.com",
-  projectId: "registro-a9fd3",
-  storageBucket: "registro-a9fd3.firebasestorage.app",
-  messagingSenderId: "399328760047",
-  appId: "1:399328760047:web:7c5c567fbefead86becb1a",
-  measurementId: "G-DLZ74RJWPX"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);    };
-
+    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Lógica del formulario
     const form = document.getElementById("formulario");
     const lista = document.getElementById("lista");
 
@@ -62,6 +53,7 @@ const analytics = getAnalytics(app);    };
       }
     });
 
+    // Mostrar estudiantes en tiempo real
     db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
       lista.innerHTML = "";
       snapshot.forEach(doc => {
