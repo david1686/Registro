@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>Registro de Estudiantes</title>
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -17,72 +17,71 @@
   <!-- SheetJS para exportar a Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
-<body class="bg-light">
+<body class="bg-gray-100">
 
-  <div class="container py-4">
-    <h1 class="mb-4 text-center">Registro de Estudiantes</h1>
+  <div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-center mb-8">Registro de Estudiantes</h1>
 
-    <form id="formulario" class="bg-white p-4 rounded shadow">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Primer Apellido:</label>
-          <input type="text" id="apellido1" class="form-control" required>
+    <form id="formulario" class="bg-white p-6 rounded-lg shadow-md">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="apellido1" class="block text-sm font-semibold">Primer Apellido:</label>
+          <input type="text" id="apellido1" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Segundo Apellido:</label>
-          <input type="text" id="apellido2" class="form-control" required>
+        <div>
+          <label for="apellido2" class="block text-sm font-semibold">Segundo Apellido:</label>
+          <input type="text" id="apellido2" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Nombre:</label>
-          <input type="text" id="nombre" class="form-control" required>
+        <div>
+          <label for="nombre" class="block text-sm font-semibold">Nombre:</label>
+          <input type="text" id="nombre" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Sección:</label>
-          <input type="text" id="seccion" class="form-control" required>
+        <div>
+          <label for="seccion" class="block text-sm font-semibold">Sección:</label>
+          <input type="text" id="seccion" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Materia:</label>
-          <input type="text" id="materia" class="form-control" required>
+        <div>
+          <label for="materia" class="block text-sm font-semibold">Materia:</label>
+          <input type="text" id="materia" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Docente:</label>
-          <input type="text" id="docente" class="form-control" required>
+        <div>
+          <label for="docente" class="block text-sm font-semibold">Docente:</label>
+          <input type="text" id="docente" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Número de ausencias:</label>
-          <input type="number" id="ausencias" class="form-control" required>
+        <div>
+          <label for="ausencias" class="block text-sm font-semibold">Número de Ausencias:</label>
+          <input type="number" id="ausencias" class="w-full p-2 border border-gray-300 rounded-md" required>
         </div>
-        <div class="col-md-12">
-          <label class="form-label">Factores de riesgo:</label>
-          <textarea id="riesgo" class="form-control" required></textarea>
+        <div class="col-span-2">
+          <label for="riesgo" class="block text-sm font-semibold">Factores de Riesgo:</label>
+          <textarea id="riesgo" class="w-full p-2 border border-gray-300 rounded-md" required></textarea>
         </div>
-        <div class="col-md-12">
-          <label class="form-label">Acciones realizadas:</label>
-          <textarea id="acciones" class="form-control" required></textarea>
+        <div class="col-span-2">
+          <label for="acciones" class="block text-sm font-semibold">Acciones Realizadas:</label>
+          <textarea id="acciones" class="w-full p-2 border border-gray-300 rounded-md" required></textarea>
         </div>
       </div>
-      <div class="text-end mt-4">
-        <button type="submit" class="btn btn-primary">Registrar</button>
+      <div class="mt-4 flex justify-end">
+        <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600">Registrar</button>
       </div>
     </form>
 
-    <div class="mt-5">
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <label for="search" class="form-label">Buscar por Sección:</label>
-          <input type="text" id="search" class="form-control" placeholder="Ej: 10-2" oninput="filtrarEstudiantes()">
+    <div class="mt-8">
+      <div class="flex justify-between items-center mb-4">
+        <div class="w-1/2">
+          <label for="search" class="block text-sm font-semibold">Buscar por Sección:</label>
+          <input type="text" id="search" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Ej: 10-2" oninput="filtrarEstudiantes()">
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-          <button class="btn btn-outline-success me-2" onclick="exportarPDF()">Exportar a PDF</button>
-          <button class="btn btn-outline-success" onclick="exportarExcel()">Exportar a Excel</button>
+        <div class="flex space-x-2">
+          <button class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600" onclick="exportarPDF()">Exportar a PDF</button>
+          <button class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600" onclick="exportarExcel()">Exportar a Excel</button>
         </div>
       </div>
 
-      <ul id="lista" class="list-group mt-4"></ul>
+      <ul id="lista" class="space-y-4"></ul>
     </div>
   </div>
 
-  <!-- Script con Firebase y funciones -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBKluxJeTIlO17uAYkrIr5JoTjLiovtDyM",
@@ -141,16 +140,17 @@
             const est = doc.data();
             if (est.seccion.toLowerCase().includes(searchTerm)) {
               const li = document.createElement("li");
-              li.classList.add("list-group-item");
+              li.classList.add("bg-white", "p-4", "rounded-lg", "shadow-md");
               li.innerHTML = `
-                <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
-                Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
-                Ausencias: ${est.ausencias}<br>
-                <em>Factores de riesgo:</em> ${est.riesgo}<br>
-                <em>Acciones realizadas:</em> ${est.acciones}<br>
-                <button class="btn btn-warning btn-sm mt-2" onclick="editarEstudiante('${doc.id}')">Editar</button>
-                <button class="btn btn-danger btn-sm mt-2" onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
-                <hr>
+                <strong class="text-xl">${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
+                <span class="text-sm">Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}</span><br>
+                <span class="text-sm">Ausencias: ${est.ausencias}</span><br>
+                <em class="text-sm">Factores de riesgo:</em> ${est.riesgo}<br>
+                <em class="text-sm">Acciones realizadas:</em> ${est.acciones}<br>
+                <div class="mt-2 space-x-2">
+                  <button class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600" onclick="editarEstudiante('${doc.id}')">Editar</button>
+                  <button class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600" onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
+                </div>
               `;
               lista.appendChild(li);
             }
@@ -163,16 +163,17 @@
       snapshot.forEach(doc => {
         const est = doc.data();
         const li = document.createElement("li");
-        li.classList.add("list-group-item");
+        li.classList.add("bg-white", "p-4", "rounded-lg", "shadow-md");
         li.innerHTML = `
-          <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
-          Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
-          Ausencias: ${est.ausencias}<br>
-          <em>Factores de riesgo:</em> ${est.riesgo}<br>
-          <em>Acciones realizadas:</em> ${est.acciones}<br>
-          <button class="btn btn-warning btn-sm mt-2" onclick="editarEstudiante('${doc.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm mt-2" onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
-          <hr>
+          <strong class="text-xl">${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
+          <span class="text-sm">Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}</span><br>
+          <span class="text-sm">Ausencias: ${est.ausencias}</span><br>
+          <em class="text-sm">Factores de riesgo:</em> ${est.riesgo}<br>
+          <em class="text-sm">Acciones realizadas:</em> ${est.acciones}<br>
+          <div class="mt-2 space-x-2">
+            <button class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600" onclick="editarEstudiante('${doc.id}')">Editar</button>
+            <button class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600" onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
+          </div>
         `;
         lista.appendChild(li);
       });
@@ -261,8 +262,5 @@
       XLSX.writeFile(workbook, "estudiantes.xlsx");
     }
   </script>
-
-  <!-- Bootstrap 5 JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
