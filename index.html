@@ -29,8 +29,16 @@
   </form>
 
   <h2>Lista de Estudiantes</h2>
+
+  <!-- Campo de búsqueda -->
+  <label for="search">Buscar Estudiante: </label>
+  <input type="text" id="search" placeholder="Buscar por nombre..." oninput="filtrarEstudiantes()">
+  <br><br>
+
+  <!-- Botones de exportación -->
   <button onclick="exportarPDF()">Exportar a PDF</button>
   <button onclick="exportarExcel()">Exportar a Excel</button>
+
   <ul id="lista"></ul>
 
   <script>
@@ -49,6 +57,7 @@
 
     const form = document.getElementById("formulario");
     const lista = document.getElementById("lista");
+    const searchInput = document.getElementById("search");
 
     let idActual = null;
 
@@ -79,6 +88,34 @@
         alert("Error al guardar: " + error.message);
       }
     });
+
+    // Función para filtrar los estudiantes
+    function filtrarEstudiantes() {
+      const searchTerm = searchInput.value.toLowerCase();
+      db.collection("estudiantes")
+        .orderBy("nombre")
+        .onSnapshot(snapshot => {
+          lista.innerHTML = "";
+          snapshot.forEach(doc => {
+            const est = doc.data();
+            // Solo muestra estudiantes cuyo nombre contenga el término de búsqueda
+            if (est.nombre.toLowerCase().includes(searchTerm)) {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                <strong>${est.nombre} ${est.apellido1} ${est.apellido2}</strong><br>
+                Sección: ${est.seccion} | Materia: ${est.materia} | Docente: ${est.docente}<br>
+                Ausencias: ${est.ausencias}<br>
+                <em>Factores de riesgo:</em> ${est.riesgo}<br>
+                <em>Acciones realizadas:</em> ${est.acciones}<br>
+                <button onclick="editarEstudiante('${doc.id}')">Editar</button>
+                <button onclick="eliminarEstudiante('${doc.id}')">Eliminar</button>
+                <hr>
+              `;
+              lista.appendChild(li);
+            }
+          });
+        });
+    }
 
     db.collection("estudiantes").orderBy("nombre").onSnapshot(snapshot => {
       lista.innerHTML = "";
